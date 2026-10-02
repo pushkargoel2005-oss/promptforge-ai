@@ -74,10 +74,10 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 then paste the output as `JWT_SECRET` in `backend/.env`.
 
-Frontend — optional `frontend/.env` (defaults to `http://localhost:5000` if absent):
+Frontend — optional `frontend/.env` (defaults to `https://promptforge-ai-h8s8.vercel.app/` if absent):
 
 ```
-VITE_API_BASE_URL=http://localhost:5000
+VITE_API_BASE_URL=https://promptforge-ai-h8s8.vercel.app/
 ```
 
 ## How to run (two terminals in VS Code)
@@ -204,7 +204,7 @@ New optional fields (`category`, `tags`, `favorite`) all have safe defaults, so 
 
 ## Troubleshooting
 
-**Studio shows “Cannot reach the backend at http://localhost:5000”**
+**Studio shows “Cannot reach the backend at https://promptforge-ai-h8s8.vercel.app/”**
 The frontend is running but no backend answered. In almost every case this means the backend terminal was never started, or it is running **old code from before the `/optimize` endpoint existed** (old code also lacks CORS headers, which browsers report as a network failure even when the server is up). Fix:
 
 ```powershell
@@ -212,7 +212,7 @@ cd E:\opencode\backend
 node server.js
 ```
 
-Then confirm it is the new code: open http://localhost:5000/api/health — you must see `{"status":"ok",…}`. If you see `Cannot GET /api/health`, an old server is still on port 5000: find the terminal running it and restart it with the command above. Only stop processes you started yourself.
+Then confirm it is the new code: open https://promptforge-ai-h8s8.vercel.app//api/health — you must see `{"status":"ok",…}`. If you see `Cannot GET /api/health`, an old server is still on port 5000: find the terminal running it and restart it with the command above. Only stop processes you started yourself.
 
 **“Optimization endpoint not found” (404)**
 Same cause as above — stale backend. Restart it with the latest code.
