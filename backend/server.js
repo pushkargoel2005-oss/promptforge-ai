@@ -1,4 +1,3 @@
-
 const dns = require("node:dns");
 const cors = require("cors");
 
@@ -33,7 +32,7 @@ const app = express();
 const defaultOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  ""
+  "https://promptforge-ai-bice.vercel.app/",
 ];
 
 const envOrigins = (process.env.FRONTEND_URL || "")
@@ -41,9 +40,7 @@ const envOrigins = (process.env.FRONTEND_URL || "")
   .map((origin) => origin.trim().replace(/\/+$/, ""))
   .filter(Boolean);
 
-const allowedOrigins = [
-  ...new Set([...defaultOrigins, ...envOrigins]),
-];
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
 app.use(
   cors({
@@ -63,20 +60,10 @@ app.use(
       return callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
-    methods: [
-      "GET",
-      "POST",
-      "PUT",
-      "PATCH",
-      "DELETE",
-      "OPTIONS",
-    ],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-    ],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     maxAge: 600,
-  })
+  }),
 );
 
 // ==========================================
@@ -131,8 +118,7 @@ app.use("/api", (req, res) => {
 app.use((err, req, res, _next) => {
   if (err && err.type === "entity.too.large") {
     return res.status(413).json({
-      message:
-        "Request is too large. Keep prompts under 20,000 characters.",
+      message: "Request is too large. Keep prompts under 20,000 characters.",
     });
   }
 
@@ -148,10 +134,7 @@ app.use((err, req, res, _next) => {
     });
   }
 
-  console.error(
-    "Unhandled server error:",
-    err?.message || err
-  );
+  console.error("Unhandled server error:", err?.message || err);
 
   return res.status(500).json({
     message: "Something went wrong. Please try again.",
@@ -165,7 +148,7 @@ app.use((err, req, res, _next) => {
 async function startServer() {
   if (!process.env.MONGODB_URI) {
     throw new Error(
-      "Missing MONGODB_URI in backend/.env. See backend/.env.example."
+      "Missing MONGODB_URI in backend/.env. See backend/.env.example.",
     );
   }
 
@@ -181,24 +164,20 @@ async function startServer() {
     const ai = getProviderStatus();
 
     if (ai.configured) {
-      console.log(
-        `AI optimization: ${ai.provider} (${ai.model})`
-      );
+      console.log(`AI optimization: ${ai.provider} (${ai.model})`);
     } else if (ai.provider !== "none" && !ai.supported) {
       console.log(
         `AI optimization: provider '${ai.provider}' is not supported ` +
-        `(supported: ${SUPPORTED_PROVIDERS.join(", ")}) — ` +
-        "using local demo mode"
+          `(supported: ${SUPPORTED_PROVIDERS.join(", ")}) — ` +
+          "using local demo mode",
       );
     } else if (ai.provider !== "none") {
       console.log(
         `AI optimization: provider '${ai.provider}' has no API key ` +
-        "or bad base URL — using local demo mode"
+          "or bad base URL — using local demo mode",
       );
     } else {
-      console.log(
-        "AI optimization: local demo mode (no provider configured)"
-      );
+      console.log("AI optimization: local demo mode (no provider configured)");
     }
   });
 }
