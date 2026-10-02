@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { Moon, Sun, MonitorSmartphone, Info, Server, KeyRound, ShieldCheck } from "lucide-react";
+import {
+  Moon,
+  Sun,
+  MonitorSmartphone,
+  Info,
+  Server,
+  KeyRound,
+  ShieldCheck,
+} from "lucide-react";
 import { api, PLATFORMS } from "../lib/api.js";
 import { loadJSON, saveJSON } from "../lib/utils.js";
 import { useToast } from "../components/Toast.jsx";
@@ -11,13 +19,17 @@ const COMFORT_KEY = "promptforge.editorComfort";
 export function applyDensity(value) {
   document.documentElement.setAttribute(
     "data-density",
-    value === "compact" ? "compact" : "comfortable"
+    value === "compact" ? "compact" : "comfortable",
   );
 }
 
 export default function Settings({ theme, onThemeChange }) {
-  const [defaultPlatform, setDefaultPlatform] = useState(() => loadJSON(DEFAULT_PLATFORM_KEY, "ChatGPT"));
-  const [comfort, setComfort] = useState(() => loadJSON(COMFORT_KEY, "comfortable"));
+  const [defaultPlatform, setDefaultPlatform] = useState(() =>
+    loadJSON(DEFAULT_PLATFORM_KEY, "ChatGPT"),
+  );
+  const [comfort, setComfort] = useState(() =>
+    loadJSON(COMFORT_KEY, "comfortable"),
+  );
   const [status, setStatus] = useState(null);
   const [checking, setChecking] = useState(true);
   const toast = useToast();
@@ -57,7 +69,13 @@ export default function Settings({ theme, onThemeChange }) {
 
   function pickTheme(next) {
     onThemeChange(next);
-    toast.success(next === "dark" ? "Dark theme on" : next === "light" ? "Light theme on" : "Following system theme");
+    toast.success(
+      next === "dark"
+        ? "Dark theme on"
+        : next === "light"
+          ? "Light theme on"
+          : "Following system theme",
+    );
   }
 
   return (
@@ -169,7 +187,7 @@ export default function Settings({ theme, onThemeChange }) {
           <br />
           Backend URL: <span className="kbd">{api.baseUrl}</span> (from{" "}
           <span className="kbd">VITE_API_BASE_URL</span>, default{" "}
-          <span className="kbd">https://promptforge-ai-h8s8.vercel.app/</span>)
+          <span className="kbd">http://localhost:5000</span>)
         </p>
         {checking ? (
           <p className="card-sub">Checking backend…</p>

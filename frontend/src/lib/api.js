@@ -1,4 +1,4 @@
-const BASE = (import.meta.env.VITE_API_BASE_URL || "https://promptforge-ai-h8s8.vercel.app/").replace(/\/$/, "");
+const BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
 
 async function request(path, { method = "GET", body, params, timeoutMs = 15000 } = {}) {
   let url = `${BASE}${path}`;
