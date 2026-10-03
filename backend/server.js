@@ -25,6 +25,9 @@ const {
 
 const app = express();
 
+// Trust the platform proxy (Render / Vercel) so Secure cookies work behind https.
+app.set("trust proxy", 1);
+
 // ==========================================
 // CORS CONFIGURATION
 // ==========================================
@@ -32,15 +35,17 @@ const app = express();
 const defaultOrigins = [
   "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "https://promptforge-ai-bice.vercel.app/",
+  "https://promptforge-ai-bice.vercel.app",
 ];
+
+const normalize = (origin) => origin.trim().replace(/\/+$/, "");
 
 const envOrigins = (process.env.FRONTEND_URL || "")
   .split(",")
-  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .map(normalize)
   .filter(Boolean);
 
-const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
+const allowedOrigins = [...new Set([...defaultOrigins.map(normalize), ...envOrigins])];
 
 app.use(
   cors({

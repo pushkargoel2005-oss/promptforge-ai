@@ -48,10 +48,13 @@ function sha256(s) {
 }
 
 function cookieFlags(maxAge) {
+  // Cross-site frontend (Vercel) + backend (Render/Vercel) needs
+  // SameSite=None + Secure. Local http keeps Lax.
+  const secure = process.env.COOKIE_SECURE === "true";
   return {
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.COOKIE_SECURE === "true", // set true behind https in production
+    sameSite: secure ? "none" : "lax",
+    secure,
     path: "/",
     maxAge,
   };
