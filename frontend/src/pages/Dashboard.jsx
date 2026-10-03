@@ -178,7 +178,6 @@ export default function Dashboard({ onSaved }) {
     [title, originalPrompt, finalPrompt]
   );
 
-  const titleLen = title.trim().length;
   const origLen = originalPrompt.trim().length;
   const data = result?.data || null;
   const suggestions = data?.suggestions || [];
@@ -437,44 +436,55 @@ export default function Dashboard({ onSaved }) {
               : "Paste a full prompt — the AI preserves your intent while improving it."}
           </p>
 
-          <div className="segmented" role="group" aria-label="Studio mode" style={{ marginBottom: 14, width: "fit-content" }}>
-            <button
-              className={studioMode === "idea" ? "active" : ""}
-              onClick={() => switchStudioMode("idea")}
-              aria-pressed={studioMode === "idea"}
-            >
-              <Lightbulb size={14} style={{ verticalAlign: "-2px" }} /> Generate from Idea
-            </button>
-            <button
-              className={studioMode === "improve" ? "active" : ""}
-              onClick={() => switchStudioMode("improve")}
-              aria-pressed={studioMode === "improve"}
-            >
-              <PenLine size={14} style={{ verticalAlign: "-2px" }} /> Improve Existing
-            </button>
-          </div>
-
-          <div className="field">
-            <span className="field-label" id="pf-detail-label">Detail level</span>
-            <div className="segmented" role="group" aria-labelledby="pf-detail-label" style={{ width: "fit-content" }}>
-              {DETAIL_OPTIONS.map((d) => (
+          <div className="field-row" style={{ alignItems: "end" }}>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <span className="field-label">Mode</span>
+              <div className="segmented" role="group" aria-label="Studio mode">
                 <button
-                  key={d.id}
-                  className={detailLevel === d.id ? "active" : ""}
-                  onClick={() => {
-                    setDetailLevel(d.id);
-                    saveJSON(DETAIL_KEY, d.id);
-                  }}
-                  aria-pressed={detailLevel === d.id}
-                  title={d.hint}
+                  className={studioMode === "idea" ? "active" : ""}
+                  onClick={() => switchStudioMode("idea")}
+                  aria-pressed={studioMode === "idea"}
+                  title="A short idea is enough — the AI expands it into a complete prompt."
                 >
-                  {d.label}
+                  <Lightbulb size={14} style={{ verticalAlign: "-2px" }} /> Idea
                 </button>
-              ))}
+                <button
+                  className={studioMode === "improve" ? "active" : ""}
+                  onClick={() => switchStudioMode("improve")}
+                  aria-pressed={studioMode === "improve"}
+                  title="Paste a full prompt — the AI preserves your intent while improving it."
+                >
+                  <PenLine size={14} style={{ verticalAlign: "-2px" }} /> Improve
+                </button>
+              </div>
             </div>
-            <span className="field-hint">
-              {DETAIL_OPTIONS.find((d) => d.id === detailLevel)?.hint} Applies to the next Generate / Optimize run.
-            </span>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <span className="field-label" id="pf-detail-label">Detail</span>
+              <div className="segmented" role="group" aria-labelledby="pf-detail-label">
+                {DETAIL_OPTIONS.map((d) => (
+                  <button
+                    key={d.id}
+                    className={detailLevel === d.id ? "active" : ""}
+                    onClick={() => {
+                      setDetailLevel(d.id);
+                      saveJSON(DETAIL_KEY, d.id);
+                    }}
+                    aria-pressed={detailLevel === d.id}
+                    title={d.hint}
+                  >
+                    {d.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label className="field-label" htmlFor="pf-platform">Platform</label>
+              <select id="pf-platform" className="select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
+                {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
           </div>
 
           <div className="field">
@@ -487,10 +497,7 @@ export default function Dashboard({ onSaved }) {
               maxLength={140}
               onChange={(e) => setTitle(e.target.value)}
             />
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span className="field-error">{errors.title || ""}</span>
-              <span className="char-count">{titleLen}/120</span>
-            </div>
+            {errors.title && <span className="field-error">{errors.title}</span>}
           </div>
 
           <div className="field">
@@ -499,8 +506,8 @@ export default function Dashboard({ onSaved }) {
             </label>
             <textarea
               id="pf-original"
-              className="textarea textarea-lg"
-              style={studioMode === "idea" ? { minHeight: 120 } : undefined}
+              className="textarea"
+              style={{ minHeight: 96 }}
               placeholder={
                 studioMode === "idea"
                   ? "e.g. A weekly meal-plan app for busy parents"
@@ -515,17 +522,10 @@ export default function Dashboard({ onSaved }) {
                 }
               }}
             />
-            <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
               <span className="field-error">{errors.originalPrompt || ""}</span>
               <span className="char-count">{origLen.toLocaleString()} / 20,000</span>
             </div>
-          </div>
-
-          <div className="field">
-            <label className="field-label" htmlFor="pf-platform">Target platform</label>
-            <select id="pf-platform" className="select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
-              {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -538,11 +538,9 @@ export default function Dashboard({ onSaved }) {
               </button>
             )}
           </div>
-          <p className="field-hint" style={{ marginTop: 8 }}>
-            Tip: press <span className="kbd">Ctrl</span> + <span className="kbd">Enter</span> in the text area to optimize.
-          </p>
         </section>
 
+        {(result || optimizing) && (
         <section className="card reveal" aria-label="Analysis result" aria-live="polite" ref={resultRef}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
             <div>
@@ -594,15 +592,17 @@ export default function Dashboard({ onSaved }) {
               </div>
 
               {data.cleanedPrompt && (
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <p className="card-title" style={{ margin: 0 }}>Cleaned prompt</p>
-                    <button className="btn btn-ghost btn-sm" onClick={() => handleCopy(data.cleanedPrompt, "Cleaned prompt copied")}>
-                      <Copy size={14} /> Copy
-                    </button>
+                <details className="collapse">
+                  <summary>Cleaned prompt</summary>
+                  <div className="collapse-body">
+                    <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 6 }}>
+                      <button className="btn btn-ghost btn-sm" onClick={() => handleCopy(data.cleanedPrompt, "Cleaned prompt copied")}>
+                        <Copy size={14} /> Copy
+                      </button>
+                    </div>
+                    <div className="result-box" tabIndex={0}>{data.cleanedPrompt}</div>
                   </div>
-                  <div className="result-box" tabIndex={0} style={{ marginTop: 6 }}>{data.cleanedPrompt}</div>
-                </div>
+                </details>
               )}
 
               <div>
@@ -664,7 +664,9 @@ export default function Dashboard({ onSaved }) {
               </div>
 
               {((data.assumptions || []).length > 0 || (data.clarifyingQuestions || []).length > 0) && (
-                <div className="grid grid-2">
+                <details className="collapse">
+                  <summary>Assumptions &amp; questions</summary>
+                  <div className="collapse-body grid grid-2">
                   {(data.assumptions || []).length > 0 && (
                     <div>
                       <p className="card-title">Assumptions</p>
@@ -681,7 +683,8 @@ export default function Dashboard({ onSaved }) {
                       </ul>
                     </div>
                   )}
-                </div>
+                  </div>
+                </details>
               )}
 
               <div className="field" style={{ marginBottom: 0 }}>
@@ -706,12 +709,8 @@ export default function Dashboard({ onSaved }) {
             </div>
           )}
 
-          {!optimizing && !data && !optimizeError && (
-            <div className="result-box" style={{ color: "var(--faint)", marginTop: 12 }} tabIndex={0}>
-              Your analysis will appear here: detected topic, cleaned text, the optimized prompt, and optional suggestions you can apply with checkboxes.
-            </div>
-          )}
-        </section>
+          </section>
+        )}
       </div>
 
       {limitInfo && (
