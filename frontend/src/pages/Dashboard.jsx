@@ -359,23 +359,21 @@ export default function Dashboard({ onSaved }) {
 
   return (
     <>
-      <div className="hero">
-        <span className="badge badge-primary"><Sparkles size={12} /> Prompt generator</span>
-        <h1 className="hero-title">{editingId ? "Edit your prompt" : "What do you want to create?"}</h1>
-        <p className="hero-sub">
-          Start rough, let Gemini analyze it, pick the suggestions you want, then save the version worth keeping.
-        </p>
-        {usage && (
-          <p className="hero-usage">
-            <Zap size={13} style={{ verticalAlign: "-2px" }} /> {usageLabel(usage)} · resets at midnight UTC
-          </p>
-        )}
-        <div className="hero-actions">
-          <button className="btn" onClick={handleReset} disabled={!dirty || optimizing || saving}>
+      <div className="gen-head">
+        <div>
+          <h1 className="gen-title">{editingId ? "Edit your prompt" : "What do you want to create?"}</h1>
+          {usage && (
+            <p className="gen-usage">
+              <Zap size={12} style={{ verticalAlign: "-1px" }} /> {usageLabel(usage)} · resets at midnight UTC
+            </p>
+          )}
+        </div>
+        <div className="gen-actions">
+          <button className="btn btn-sm" onClick={handleReset} disabled={!dirty || optimizing || saving}>
             <RotateCcw /> Reset
           </button>
-          <button className="btn btn-primary" onClick={handleSave} disabled={optimizing || saving}>
-            <Save /> {saving ? "Saving…" : editingId ? "Update prompt" : "Save prompt"}
+          <button className="btn btn-sm btn-primary" onClick={handleSave} disabled={optimizing || saving}>
+            <Save /> {saving ? "Saving…" : editingId ? "Update" : "Save prompt"}
           </button>
         </div>
       </div>
