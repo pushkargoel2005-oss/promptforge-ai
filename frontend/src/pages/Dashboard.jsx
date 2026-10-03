@@ -428,7 +428,7 @@ export default function Dashboard({ onSaved }) {
         </div>
       )}
 
-      <div className="grid grid-2" style={{ alignItems: "start" }}>
+      <div className="grid">
         <section className="card" aria-label="Prompt editor">
           <p className="card-title">Your input</p>
           <p className="card-sub">
