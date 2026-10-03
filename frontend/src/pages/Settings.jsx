@@ -3,6 +3,7 @@ import {
   Moon,
   Sun,
   MonitorSmartphone,
+  Info,
   Server,
   KeyRound,
   ShieldCheck,
@@ -29,10 +30,40 @@ export default function Settings({ theme, onThemeChange }) {
   const [comfort, setComfort] = useState(() =>
     loadJSON(COMFORT_KEY, "comfortable"),
   );
+  const [status, setStatus] = useState(null);
+  const [checking, setChecking] = useState(true);
   const toast = useToast();
 
+  async function checkStatus() {
+    setChecking(true);
+    try {
+      const s = await api.optimizeStatus();
+      setStatus(s);
+    } catch {
+      setStatus(null);
+    } finally {
+      setChecking(false);
+    }
+  }
+
   useEffect(() => {
+    let alive = true;
     applyDensity(loadJSON(COMFORT_KEY, "comfortable"));
+    setChecking(true);
+    api
+      .optimizeStatus()
+      .then((s) => {
+        if (alive) setStatus(s);
+      })
+      .catch(() => {
+        if (alive) setStatus(null);
+      })
+      .finally(() => {
+        if (alive) setChecking(false);
+      });
+    return () => {
+      alive = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -158,6 +189,38 @@ export default function Settings({ theme, onThemeChange }) {
           <span className="kbd">VITE_API_BASE_URL</span>, default{" "}
           <span className="kbd">http://localhost:5000</span>)
         </p>
+        {checking ? (
+          <p className="card-sub">Checking backend…</p>
+        ) : status ? (
+          <div
+            className={`notice ${status.providerConfigured ? "notice-ok" : "notice-warn"}`}
+          >
+            <Info />
+            <div>
+              <span className="notice-title">
+                {status.providerConfigured
+                  ? `Connected: ${status.provider}${status.model ? ` · ${status.model}` : ""} (real AI mode)`
+                  : "Not configured — local demo mode"}
+              </span>
+              {status.providerConfigured
+                ? "Generate on the dashboard calls your provider from the server. Keys never reach the browser."
+                : "Optimize structures prompts with a built-in template. Saving and the library work fully without any key."}
+            </div>
+          </div>
+        ) : (
+          <div className="notice notice-warn">
+            <Info />
+            <div>
+              <span className="notice-title">Backend unreachable</span>
+              Start the backend on port 5000, then press Refresh.
+            </div>
+          </div>
+        )}
+        <div style={{ marginTop: 10 }}>
+          <button className="btn btn-sm" onClick={checkStatus}>
+            Refresh status
+          </button>
+        </div>
       </div>
 
       <div className="card">
