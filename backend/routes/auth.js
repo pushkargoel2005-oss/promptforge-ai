@@ -72,7 +72,7 @@ router.post("/signup", signupLimiter, async (req, res) => {
 
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({ name: cleanName.slice(0, 60), email: cleanEmail, passwordHash });
-    authSvc.setAuthCookie(res, user._id);
+    authSvc.setAuthCookie(res, user._id, req);
     const moved = await transfer(user._id, req);
     return res.status(201).json({ message: "Account created", user: user.toClient(), transferredPrompts: moved });
   } catch (error) {
@@ -100,7 +100,7 @@ router.post("/signin", signinLimiter, async (req, res) => {
       return res.status(401).json({ message: "Incorrect email or password." });
     }
 
-    authSvc.setAuthCookie(res, user._id);
+    authSvc.setAuthCookie(res, user._id, req);
     const moved = await transfer(user._id, req);
     return res.json({ message: "Signed in", user: user.toClient(), transferredPrompts: moved });
   } catch (error) {
@@ -110,7 +110,7 @@ router.post("/signin", signinLimiter, async (req, res) => {
 
 // POST /api/auth/signout
 router.post("/signout", (req, res) => {
-  authSvc.clearAuthCookie(res);
+  authSvc.clearAuthCookie(res, req);
   return res.json({ message: "Signed out" });
 });
 
@@ -121,7 +121,7 @@ router.get("/me", async (req, res) => {
     if (!userId) return res.status(401).json({ message: "Not signed in." });
     const user = await User.findById(userId).select("name email createdAt");
     if (!user) {
-      authSvc.clearAuthCookie(res);
+      authSvc.clearAuthCookie(res, req);
       return res.status(401).json({ message: "Not signed in." });
     }
     return res.json({ user: user.toClient() });

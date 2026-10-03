@@ -167,8 +167,7 @@ async function startServer() {
     console.log(`Server running on port ${PORT}`);
     console.log(`Allowed origins: ${allowedOrigins.join(", ")}`);
     console.log(
-      `Auth cookies: SameSite=${process.env.COOKIE_SECURE === "true" ? "None; Secure" : "Lax"} ` +
-        `(set COOKIE_SECURE=true behind https with a cross-site frontend)`
+      `Auth cookies: ${process.env.COOKIE_SECURE === "true" ? "SameSite=None; Secure (forced)" : process.env.COOKIE_SECURE === "false" ? "SameSite=Lax (forced)" : "auto (https requests -> SameSite=None; Secure, http -> Lax)"}`
     );
 
     const ai = getProviderStatus();

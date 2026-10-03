@@ -47,10 +47,20 @@ function sha256(s) {
   return crypto.createHash("sha256").update(String(s)).digest("hex");
 }
 
-function cookieFlags(maxAge) {
+function isSecureRequest(req) {
+  const override = (process.env.COOKIE_SECURE || "").trim().toLowerCase();
+  if (override === "true") return true;
+  if (override === "false") return false;
+  // Auto-detect: https behind a proxy (Vercel/Render sets x-forwarded-proto)
+  // needs SameSite=None + Secure for cross-site cookies. Plain http (local
+  // dev) keeps Lax. Explicit COOKIE_SECURE=true/false always wins.
+  return req?.secure === true || req?.headers?.["x-forwarded-proto"] === "https";
+}
+
+function cookieFlags(req, maxAge) {
   // Cross-site frontend (Vercel) + backend (Render/Vercel) needs
   // SameSite=None + Secure. Local http keeps Lax.
-  const secure = process.env.COOKIE_SECURE === "true";
+  const secure = isSecureRequest(req);
   return {
     httpOnly: true,
     sameSite: secure ? "none" : "lax",
@@ -88,16 +98,16 @@ function verifyGuestToken(token) {
   }
 }
 
-function setAuthCookie(res, userId) {
-  res.cookie(TOKEN_COOKIE, signAuthToken(userId), cookieFlags(TOKEN_TTL_MS));
+function setAuthCookie(res, userId, req) {
+  res.cookie(TOKEN_COOKIE, signAuthToken(userId), cookieFlags(req, TOKEN_TTL_MS));
 }
 
-function clearAuthCookie(res) {
-  res.clearCookie(TOKEN_COOKIE, { ...cookieFlags(TOKEN_TTL_MS), maxAge: undefined });
+function clearAuthCookie(res, req) {
+  res.clearCookie(TOKEN_COOKIE, { ...cookieFlags(req, TOKEN_TTL_MS), maxAge: undefined });
 }
 
-function setGuestCookie(res, gid) {
-  res.cookie(GUEST_COOKIE, signGuestToken(gid), cookieFlags(GUEST_TTL_MS));
+function setGuestCookie(res, gid, req) {
+  res.cookie(GUEST_COOKIE, signGuestToken(gid), cookieFlags(req, GUEST_TTL_MS));
 }
 
 // ---- guest identity ----
@@ -114,7 +124,7 @@ async function ensureGuest(req, res) {
   if (existing) return { gid: existing, fresh: false };
 
   const gid = crypto.randomUUID();
-  setGuestCookie(res, gid);
+  setGuestCookie(res, gid, req);
   return { gid, fresh: true };
 }
 
