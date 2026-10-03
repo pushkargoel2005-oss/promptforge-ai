@@ -6,6 +6,7 @@ import { copyText, formatDate } from "../lib/utils.js";
 import { useToast } from "../components/Toast.jsx";
 import { EmptyState, SkeletonList } from "../components/ui.jsx";
 import PromptCard from "../components/PromptCard.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 
 export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite, refreshKey }) {
   const location = useLocation();
@@ -22,6 +23,9 @@ export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite
   const [onlyFavorites, setOnlyFavorites] = useState(false);
   const [openId, setOpenId] = useState(location.state?.openId || null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  // Same as Dashboard: reload when the session changes (guest <-> user).
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
   async function load() {
     setLoading(true);
@@ -54,7 +58,7 @@ export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite
     return () => {
       alive = false;
     };
-  }, [refreshKey]);
+  }, [refreshKey, userId]);
   useEffect(() => {
     if (location.state?.openId) {
       setOpenId(location.state.openId);

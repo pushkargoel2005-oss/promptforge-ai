@@ -7,7 +7,7 @@ import PromptCard from "../components/PromptCard.jsx";
 import SeriesChart from "../components/Charts.jsx";
 import { copyText } from "../lib/utils.js";
 import { useToast } from "../components/Toast.jsx";
-import { usageLabel } from "../context/AuthContext.jsx";
+import { useAuth, usageLabel } from "../context/AuthContext.jsx";
 
 export default function Dashboard({ onEditPrompt, onDeletePrompt, onToggleFavorite, refreshKey }) {
   const [prompts, setPrompts] = useState([]);
@@ -19,6 +19,10 @@ export default function Dashboard({ onEditPrompt, onDeletePrompt, onToggleFavori
   const [range, setRange] = useState(7);
   const toast = useToast();
   const navigate = useNavigate();
+  // Reload on sign-in/sign-out: prompts + stats are cookie-scoped, so the
+  // guest view must refresh the moment the session changes.
+  const { user } = useAuth();
+  const userId = user?.id || null;
 
   async function load() {
     setLoading(true);
@@ -74,7 +78,7 @@ export default function Dashboard({ onEditPrompt, onDeletePrompt, onToggleFavori
       alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [refreshKey, range]);
+  }, [refreshKey, range, userId]);
 
   async function handleCopy(text) {
     try {

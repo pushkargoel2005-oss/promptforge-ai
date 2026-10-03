@@ -165,6 +165,11 @@ async function startServer() {
 
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    console.log(`Allowed origins: ${allowedOrigins.join(", ")}`);
+    console.log(
+      `Auth cookies: SameSite=${process.env.COOKIE_SECURE === "true" ? "None; Secure" : "Lax"} ` +
+        `(set COOKIE_SECURE=true behind https with a cross-site frontend)`
+    );
 
     const ai = getProviderStatus();
 
