@@ -14,7 +14,7 @@ import {
   PenLine,
   Zap,
 } from "lucide-react";
-import { api, PLATFORMS, CATEGORIES } from "../lib/api.js";
+import { api, PLATFORMS } from "../lib/api.js";
 import { copyText, loadJSON, saveJSON } from "../lib/utils.js";
 import { useToast } from "../components/Toast.jsx";
 import { useAuth, usageLabel } from "../context/AuthContext.jsx";
@@ -51,11 +51,6 @@ export default function Studio({ onSaved }) {
     return m === "improve" ? "improve" : "idea";
   });
   const [detailLevel, setDetailLevel] = useState(() => normalizeDetail(loadJSON(DETAIL_KEY, "detailed")));
-  const [category, setCategory] = useState("Other");
-  const [audience, setAudience] = useState("");
-  const [tone, setTone] = useState("");
-  const [outputFormat, setOutputFormat] = useState("");
-  const [contextNotes, setContextNotes] = useState("");
 
   const [result, setResult] = useState(null); // { mode, provider, model, demo, viaFallback, data }
   const [resultLevel, setResultLevel] = useState("detailed"); // detail level the shown result was generated with
@@ -83,7 +78,6 @@ export default function Studio({ onSaved }) {
       setTitle(t.title || "");
       setOriginalPrompt(t.prompt || "");
       setPlatform(t.platform || "ChatGPT");
-      setCategory(t.category || "Other");
       window.history.replaceState({}, "");
       toast.info(`Template "${t.title}" loaded — customize it, then Optimize`);
       return;
@@ -94,7 +88,6 @@ export default function Studio({ onSaved }) {
       setTitle(p.title || "");
       setOriginalPrompt(p.originalPrompt || "");
       setPlatform(p.platform || "ChatGPT");
-      setCategory(p.category || "Other");
       setFinalPrompt(p.optimizedPrompt || "");
       setApplied(Array.isArray(p.selectedSuggestions) ? p.selectedSuggestions : []);
       setEditingId(p._id || null);
@@ -111,11 +104,6 @@ export default function Studio({ onSaved }) {
       setTitle(draft.title || "");
       setOriginalPrompt(draft.originalPrompt || "");
       setPlatform(draft.platform || loadJSON(DEFAULT_PLATFORM_KEY, "ChatGPT"));
-      setCategory(draft.category || "Other");
-      setAudience(draft.audience || "");
-      setTone(draft.tone || "");
-      setOutputFormat(draft.outputFormat || "");
-      setContextNotes(draft.contextNotes || "");
       setFinalPrompt(draft.finalPrompt || "");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -156,14 +144,9 @@ export default function Studio({ onSaved }) {
       title,
       originalPrompt,
       platform,
-      category,
-      audience,
-      tone,
-      outputFormat,
-      contextNotes,
       finalPrompt,
     });
-  }, [studioMode, detailLevel, title, originalPrompt, platform, category, audience, tone, outputFormat, contextNotes, finalPrompt]);
+  }, [studioMode, detailLevel, title, originalPrompt, platform, finalPrompt]);
 
   const dirty = useMemo(
     () => Boolean(title.trim() || originalPrompt.trim() || finalPrompt.trim()),
@@ -214,11 +197,6 @@ export default function Studio({ onSaved }) {
       title: title.trim(),
       originalPrompt: originalPrompt.trim(),
       platform,
-      category,
-      audience: audience.trim(),
-      tone: tone.trim(),
-      outputFormat: outputFormat.trim(),
-      contextNotes: contextNotes.trim(),
     };
   }
 
@@ -314,7 +292,7 @@ export default function Studio({ onSaved }) {
         selectedSuggestions: applied,
         detailLevel,
         platform,
-        category: data?.taskCategory || category,
+        category: data?.taskCategory || "Other",
       };
       let saved;
       if (editingId) {
@@ -340,10 +318,6 @@ export default function Studio({ onSaved }) {
     if (dirty && !window.confirm("Discard everything in the editor? This cannot be undone.")) return;
     setTitle("");
     setOriginalPrompt("");
-    setAudience("");
-    setTone("");
-    setOutputFormat("");
-    setContextNotes("");
     setResult(null);
     setSelected([]);
     setApplied([]);
@@ -519,40 +493,11 @@ export default function Studio({ onSaved }) {
             </div>
           </div>
 
-          <div className="field-row">
-            <div className="field">
-              <label className="field-label" htmlFor="pf-platform">Target platform</label>
-              <select id="pf-platform" className="select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
-                {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div className="field">
-              <label className="field-label" htmlFor="pf-category">Category hint</label>
-              <select id="pf-category" className="select" value={category} onChange={(e) => setCategory(e.target.value)}>
-                {[...CATEGORIES, "Design"].map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="field-row">
-            <div className="field">
-              <label className="field-label" htmlFor="pf-audience">Audience <span className="field-hint">(optional)</span></label>
-              <input id="pf-audience" className="input" placeholder="e.g. junior developers" value={audience} onChange={(e) => setAudience(e.target.value)} />
-            </div>
-            <div className="field">
-              <label className="field-label" htmlFor="pf-tone">Tone <span className="field-hint">(optional)</span></label>
-              <input id="pf-tone" className="input" placeholder="e.g. direct, friendly" value={tone} onChange={(e) => setTone(e.target.value)} />
-            </div>
-          </div>
-
           <div className="field">
-            <label className="field-label" htmlFor="pf-format">Output format <span className="field-hint">(optional)</span></label>
-            <input id="pf-format" className="input" placeholder="e.g. table with steps, then a summary" value={outputFormat} onChange={(e) => setOutputFormat(e.target.value)} />
-          </div>
-
-          <div className="field">
-            <label className="field-label" htmlFor="pf-context">Additional context <span className="field-hint">(optional)</span></label>
-            <textarea id="pf-context" className="textarea" style={{ minHeight: 90 }} placeholder="Paste background, constraints, examples, or data the model needs…" value={contextNotes} onChange={(e) => setContextNotes(e.target.value)} />
+            <label className="field-label" htmlFor="pf-platform">Target platform</label>
+            <select id="pf-platform" className="select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
+              {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
