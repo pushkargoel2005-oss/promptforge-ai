@@ -13,6 +13,8 @@ import {
   Lightbulb,
   PenLine,
   Zap,
+  Download,
+  Dices,
 } from "lucide-react";
 import { api, PLATFORMS } from "../lib/api.js";
 import { copyText, loadJSON, saveJSON } from "../lib/utils.js";
@@ -29,6 +31,15 @@ const DETAIL_OPTIONS = [
   { id: "simple", label: "Simple", hint: "Concise — essentials only, no extra detail." },
   { id: "detailed", label: "Detailed", hint: "Comprehensive and structured, with examples where useful." },
   { id: "expert", label: "Expert", hint: "Professional depth: specs, edge cases, testing, security." },
+];
+
+const SAMPLE_IDEAS = [
+  "A weekly meal-plan app for busy parents",
+  "A landing page for a handmade candle shop",
+  "A 4-week marathon training plan for beginners",
+  "A bedtime story about a robot who learns to paint",
+  "A cold-email sequence for a freelance designer",
+  "A study timetable for final exams in biology",
 ];
 
 function normalizeDetail(v) {
@@ -293,6 +304,44 @@ export default function Dashboard({ onSaved }) {
     toast.success(`Added ${fresh.length} suggestion${fresh.length === 1 ? "" : "s"} to the final prompt`);
   }
 
+  async function handleExportMarkdown() {
+    const final = finalPrompt.trim() || data?.optimizedPrompt?.trim() || "";
+    if (!final) {
+      toast.error("Nothing to export yet — generate a prompt first.");
+      return;
+    }
+    const lines = [
+      `# ${title.trim() || "Untitled prompt"}`,
+      ``,
+      `- Platform: ${platform}`,
+      `- Detail: ${resultLevel}`,
+      data?.detectedTopic ? `- Topic: ${data.detectedTopic}` : null,
+      ``,
+      `## Final prompt`,
+      ``,
+      final,
+      ``,
+    ].filter((l) => l !== null);
+    const blob = new Blob([lines.join("\n")], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${(title.trim() || "prompt").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "prompt"}.md`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    toast.success("Prompt downloaded as Markdown");
+  }
+
+  const finalWords = finalPrompt.trim() ? finalPrompt.trim().split(/\s+/).length : 0;
+
+  function fillSampleIdea() {
+    const pool = SAMPLE_IDEAS.filter((s) => s !== originalPrompt.trim());
+    setOriginalPrompt(pool[Math.floor(Math.random() * pool.length)]);
+    setErrors((e) => ({ ...e, originalPrompt: "" }));
+  }
+
   async function handleCopy(text, label = "Copied to clipboard") {
     try {
       await copyText(text);
@@ -499,9 +548,16 @@ export default function Dashboard({ onSaved }) {
           </div>
 
           <div className="field">
-            <label className="field-label" htmlFor="pf-original">
-              {studioMode === "idea" ? "What do you want to create?" : "Original prompt"}
-            </label>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+              <label className="field-label" htmlFor="pf-original" style={{ margin: 0 }}>
+                {studioMode === "idea" ? "What do you want to create?" : "Original prompt"}
+              </label>
+              {studioMode === "idea" && (
+                <button type="button" className="btn btn-ghost btn-sm" onClick={fillSampleIdea} title="Fill in a random example idea">
+                  <Dices size={14} /> Try an example
+                </button>
+              )}
+            </div>
             <textarea
               id="pf-original"
               className="textarea"
@@ -686,11 +742,17 @@ export default function Dashboard({ onSaved }) {
               )}
 
               <div className="field" style={{ marginBottom: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
                   <label className="field-label" htmlFor="pf-final">Final prompt (editable)</label>
-                  <button className="btn btn-ghost btn-sm" disabled={!finalPrompt} onClick={() => handleCopy(finalPrompt, "Final prompt copied")}>
-                    <Copy size={14} /> Copy final
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    {finalWords > 0 && <span className="field-hint">{finalWords} words</span>}
+                    <button className="btn btn-ghost btn-sm" disabled={!finalPrompt} onClick={handleExportMarkdown} title="Download as a Markdown file">
+                      <Download size={14} /> Export .md
+                    </button>
+                    <button className="btn btn-ghost btn-sm" disabled={!finalPrompt} onClick={() => handleCopy(finalPrompt, "Final prompt copied")}>
+                      <Copy size={14} /> Copy final
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   id="pf-final"
