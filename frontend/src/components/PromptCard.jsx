@@ -12,7 +12,7 @@ export default function PromptCard({ prompt, onCopy, onOpen, onEdit, onDelete, o
           aria-label={prompt.favorite ? "Remove from favorites" : "Mark as favorite"}
           title={prompt.favorite ? "Remove from favorites" : "Mark as favorite"}
         >
-          <Star size={15} fill={prompt.favorite ? "currentColor" : "none"} color={prompt.favorite ? "#d97706" : "currentColor"} />
+          <Star size={15} fill={prompt.favorite ? "currentColor" : "none"} color="currentColor" />
         </button>
       </div>
       <div className="prompt-meta">

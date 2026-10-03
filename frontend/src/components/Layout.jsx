@@ -45,6 +45,10 @@ export default function Layout({ children, theme, onToggleTheme, sidebarOpen, se
 
   return (
     <div className="app-shell">
+      <div className="bg-decor" aria-hidden="true">
+        <span className="orb orb-a" />
+        <span className="orb orb-b" />
+      </div>
       <div className={`scrim ${sidebarOpen ? "show" : ""}`} onClick={() => setSidebarOpen(false)} />
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} aria-label="Primary">
         <Link

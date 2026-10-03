@@ -9,6 +9,7 @@ import Templates from "./pages/Templates.jsx";
 import Settings from "./pages/Settings.jsx";
 import { api } from "./lib/api.js";
 import { loadJSON, saveJSON } from "./lib/utils.js";
+import { initInteractions } from "./lib/interactions.js";
 
 const THEME_KEY = "promptforge.theme";
 
@@ -35,12 +36,20 @@ function Shell() {
   const effective = resolveTheme(themeMode);
 
   useEffect(() => {
+    const stop = initInteractions();
+    return stop;
+  }, []);
+
+  useEffect(() => {
+    document.documentElement.classList.add("theme-anim");
+    const t = setTimeout(() => document.documentElement.classList.remove("theme-anim"), 400);
     document.documentElement.setAttribute("data-theme", effective);
     saveJSON(THEME_KEY, themeMode);
     document.documentElement.setAttribute(
       "data-density",
       loadJSON("promptforge.editorComfort", "comfortable") === "compact" ? "compact" : "comfortable"
     );
+    return () => clearTimeout(t);
   }, [themeMode, effective]);
 
   useEffect(() => {

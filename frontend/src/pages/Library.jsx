@@ -264,7 +264,7 @@ export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite
             <p className="card-sub">This permanently removes it from MongoDB. This cannot be undone.</p>
             <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", marginTop: 12 }}>
               <button className="btn" onClick={() => setConfirmDelete(null)}>Cancel</button>
-              <button className="btn btn-primary" style={{ background: "var(--danger)", borderColor: "var(--danger)", color: "#fff" }} onClick={() => handleDelete(confirmDelete)}>
+              <button className="btn btn-primary" style={{ background: "var(--text)", borderColor: "var(--text)", color: "var(--bg)" }} onClick={() => handleDelete(confirmDelete)}>
                 <Trash2 size={15} /> Delete permanently
               </button>
             </div>
