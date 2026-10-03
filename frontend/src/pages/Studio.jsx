@@ -248,9 +248,15 @@ export default function Studio({ onSaved }) {
       if (e.data?.usage) setUsage(e.data.usage);
       else refreshAuth();
       // 429 means the daily allowance is spent — show the signup journey,
-      // keeping every word typed (nothing navigates away).
-      if (e.status === 429) {
+      // keeping every word typed (nothing navigates away). Provider-side
+      // 429/503 overload has no `usage` field, so it falls through to the
+      // retryable error below instead of the limit modal.
+      if (e.status === 429 && e.data?.usage) {
         setLimitInfo({ message: e.message });
+      } else if (e.status === 429 || e.status === 502 || e.status === 503) {
+        setOptimizeError(
+          `${e.message || "The AI provider is overloaded right now."} Your input is preserved as a draft and no allowance was used. Wait ~30 seconds, then press Retry.`
+        );
       } else if (e.status === 404) {
         // 404 usually means the backend on this URL runs old code without the endpoint.
         setOptimizeError(

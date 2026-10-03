@@ -325,14 +325,73 @@ function geminiErrorMessage(status, bodyText) {
   if (/API key not valid/i.test(body))
     return "Gemini rejected the API key. Check GEMINI_API_KEY (or AI_API_KEY) in backend/.env, then restart the backend.";
   if (status === 404 || /not found/i.test(body))
-    return `Gemini model '${providerModel()}' was not found or is not available for your API key. Try gemini-2.5-flash or gemini-2.0-flash in AI_MODEL.`;
+    return `Gemini model '${providerModel()}' was not found or is not available for your API key. Try gemini-flash-latest or gemini-flash-lite-latest in AI_MODEL.`;
   if (status === 400)
     return `Gemini rejected the request (400). ${body.slice(0, 160) || "Check AI_MODEL and try again."}`;
   if (status === 403)
     return "Gemini refused the request (403). The key may lack access or billing may be required.";
-  if (status === 429) return "Gemini rate limit reached (429). Wait a bit and retry.";
+  if (status === 429)
+    return "Gemini is rate-limited right now (429). This is temporary Google-side capacity. Wait ~30 seconds and press Retry — your text is preserved and your daily allowance was refunded.";
+  if (status === 503 || status === 500 || status === 502)
+    return `Gemini is overloaded right now (${status}). This is temporary Google-side capacity, not a bug in your prompt. Wait ~30 seconds and press Retry — your text is preserved and your daily allowance was refunded.`;
   if (status >= 500) return `Gemini error (${status}). Try again in a moment.`;
   return `Gemini request failed (${status}).`;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableGeminiStatus(status) {
+  return status === 429 || status === 500 || status === 502 || status === 503;
+}
+
+function isLocalBaseUrl() {
+  try {
+    const host = new URL(providerBaseUrl()).hostname.toLowerCase();
+    return host === "localhost" || host === "127.0.0.1" || host === "::1" || host === "[::1]";
+  } catch {
+    return false;
+  }
+}
+
+// One model, up to 2 attempts on retryable 429/5xx with a short backoff.
+// 503 from Gemini is almost always transient overload — a single delayed
+// retry recovers a large share without hammering the API.
+async function callGeminiModelWithRetry(model, input, opts = {}) {
+  const maxAttempts = 2;
+  let lastErr = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await callGeminiModel(model, input, opts);
+    } catch (err) {
+      lastErr = err;
+      if (!isRetryableGeminiStatus(err && err.status)) throw err;
+      if (attempt < maxAttempts && !isLocalBaseUrl()) {
+        // Keep Vercel (60s) + frontend (120s) budgets safe: 1.2s then stop.
+        await sleep(1200 * attempt);
+      } else if (attempt < maxAttempts) {
+        // Localhost stubs in automated tests: retry immediately, no delay.
+      } else {
+        throw err;
+      }
+    }
+  }
+  throw lastErr;
+}
+
+// Ordered fallback chain for capacity errors only. Explicit
+// AI_FALLBACK_MODEL wins; then well-known stable flash aliases that differ
+// from the primary. Config errors (400/401/403/404) never fall through.
+function geminiFallbackChain(primary) {
+  const chain = [];
+  const envFb = (process.env.AI_FALLBACK_MODEL || "").trim();
+  if (envFb && envFb !== primary) chain.push(envFb);
+  for (const m of ["gemini-flash-latest", "gemini-flash-lite-latest"]) {
+    if (m !== primary && !chain.includes(m)) chain.push(m);
+  }
+  // Don't thrash: primary (up to 2 tries) + at most 2 fallbacks.
+  return chain.slice(0, 2);
 }
 
 // Google Gemini via the native v1beta REST API (generateContent).
@@ -414,20 +473,24 @@ async function callGeminiModel(model, input, { jsonMode = false, systemOverride 
   return text.slice(0, jsonMode ? 20000 : 30000);
 }
 
-// Gemini with an optional capacity fallback. If the primary model returns
-// 429/503 (rate limit / high demand), AI_FALLBACK_MODEL gets one attempt.
-// Config errors (400/401/404) never trigger the fallback — the user must fix
-// them. Returns { text, model } so callers report what actually served.
+// Gemini with retry + capacity fallback. Primary gets up to 2 attempts on
+// 429/5xx (transient overload); then each fallback model gets one attempt.
+// Config errors (400/401/403/404) never trigger the fallback — the user must
+// fix them. Returns { text, model } so callers report what actually served.
 async function optimizeWithGemini(input) {
   const primary = providerModel();
   try {
-    return { text: await callGeminiModel(primary, input), model: primary, viaFallback: false };
+    return { text: await callGeminiModelWithRetry(primary, input), model: primary, viaFallback: false };
   } catch (err) {
-    const retryable = err && (err.status === 429 || err.status === 503);
-    const fallbackModel = (process.env.AI_FALLBACK_MODEL || "").trim();
-    if (retryable && fallbackModel && fallbackModel !== primary) {
-      const text = await callGeminiModel(fallbackModel, input);
-      return { text, model: fallbackModel, viaFallback: true };
+    if (!isRetryableGeminiStatus(err && err.status)) throw err;
+    for (const fb of geminiFallbackChain(primary)) {
+      try {
+        const text = await callGeminiModel(fb, input);
+        return { text, model: fb, viaFallback: true };
+      } catch (fbErr) {
+        if (!isRetryableGeminiStatus(fbErr && fbErr.status)) throw fbErr;
+        err = fbErr;
+      }
     }
     throw err;
   }
@@ -761,16 +824,23 @@ async function generateStructuredAiText(input) {
   const instruction = buildStructuredInstruction(input.mode, input.detailLevel);
   if (name === "gemini") {
     const primary = providerModel();
+    const opts = { jsonMode: true, systemOverride: instruction };
     try {
-      const text = await callGeminiModel(primary, input, { jsonMode: true, systemOverride: instruction });
+      const text = await callGeminiModelWithRetry(primary, input, opts);
       return { text, model: primary, viaFallback: false };
     } catch (err) {
-      const fb = (process.env.AI_FALLBACK_MODEL || "").trim();
-      if (fb && fb !== primary && (err.status === 429 || err.status === 503)) {
-        const text = await callGeminiModel(fb, input, { jsonMode: true, systemOverride: instruction });
-        return { text, model: fb, viaFallback: true };
+      if (!isRetryableGeminiStatus(err && err.status)) throw err;
+      let lastErr = err;
+      for (const fb of geminiFallbackChain(primary)) {
+        try {
+          const text = await callGeminiModel(fb, input, opts);
+          return { text, model: fb, viaFallback: true };
+        } catch (fbErr) {
+          if (!isRetryableGeminiStatus(fbErr && fbErr.status)) throw fbErr;
+          lastErr = fbErr;
+        }
       }
-      throw err;
+      throw lastErr;
     }
   }
   const text = await optimizeWithProvider(input, { jsonMode: true, systemOverride: instruction });
@@ -820,8 +890,13 @@ async function optimizeStructured(input) {
     };
   } catch (err) {
     if (err.statusCode) throw err;
+    // Preserve retryable Google statuses so the route can answer 429/503
+    // (frontend shows Retry). Everything else stays 502. Usage is refunded
+    // by the caller, so state that nothing was consumed.
+    const retryStatus = err && isRetryableGeminiStatus(err.status) ? err.status : null;
+    const code = retryStatus === 429 ? 429 : retryStatus ? 503 : 502;
     const e = new Error(`${err.message || "AI request failed."} Nothing was saved.`);
-    e.statusCode = 502;
+    e.statusCode = code;
     throw e;
   }
 }

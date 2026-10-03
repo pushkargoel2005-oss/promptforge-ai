@@ -302,11 +302,11 @@ router.post("/optimize/structured", async (req, res) => {
       return res.json({ ...result, usage, providerConfigured: getProviderStatus().configured });
     } catch (error) {
       await refundUsage(ident, day);
-      const code = [400, 502, 503].includes(error.statusCode) ? error.statusCode : 500;
+      const code = [400, 429, 502, 503].includes(error.statusCode) ? error.statusCode : 500;
       return res.status(code).json({ message: error.message || "Optimization failed. Please try again." });
     }
   } catch (error) {
-    const code = [400, 502, 503].includes(error.statusCode) ? error.statusCode : 500;
+    const code = [400, 429, 502, 503].includes(error.statusCode) ? error.statusCode : 500;
     return res.status(code).json({ message: error.message || "Optimization failed. Please try again." });
   }
 });
