@@ -69,9 +69,16 @@ export default function Studio({ onSaved }) {
   const [errors, setErrors] = useState({});
   const [statusChecked, setStatusChecked] = useState(false);
 
-  // Load template / saved prompt passed via navigation state, else restore draft.
+  // Load template / saved prompt / dashboard idea via navigation state, else restore draft.
   useEffect(() => {
     const incoming = location.state;
+    if (incoming?.idea) {
+      setStudioMode("idea");
+      setOriginalPrompt(incoming.idea);
+      window.history.replaceState({}, "");
+      toast.info("Your idea is ready — press Generate prompt");
+      return;
+    }
     if (incoming?.template) {
       const t = incoming.template;
       setStudioMode("idea");
