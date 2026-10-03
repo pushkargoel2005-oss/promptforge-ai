@@ -114,7 +114,7 @@ export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite
         </div>
         <div className="page-actions">
           <button className="btn" onClick={load} disabled={loading}><RefreshCw size={15} /> Refresh</button>
-          <button className="btn btn-primary" onClick={() => navigate("/studio")}><Plus size={15} /> New prompt</button>
+          <button className="btn btn-primary" onClick={() => navigate("/")}><Plus size={15} /> New prompt</button>
         </div>
       </div>
 
@@ -174,8 +174,8 @@ export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite
         prompts.length === 0 ? (
           <EmptyState
             title="No prompts saved yet"
-            sub="Your library is empty. Create one in the Studio or start from a template."
-            action={<button className="btn btn-primary" onClick={() => navigate("/studio")}><Plus size={15} /> Create your first prompt</button>}
+            sub="Your library is empty. Create one on the dashboard or start from a template."
+            action={<button className="btn btn-primary" onClick={() => navigate("/")}><Plus size={15} /> Create your first prompt</button>}
           />
         ) : (
           <EmptyState
@@ -249,7 +249,7 @@ export default function Library({ onEditPrompt, onDeletePrompt, onToggleFavorite
             )}
             <div style={{ display: "flex", gap: 8, marginTop: 14, flexWrap: "wrap" }}>
               <button className="btn btn-sm" onClick={() => handleCopy(openPrompt.optimizedPrompt || openPrompt.originalPrompt)}><Copy size={14} /> Copy best version</button>
-              <button className="btn btn-sm" onClick={() => { setOpenId(null); onEditPrompt(openPrompt); }}><Pencil size={14} /> Edit in Studio</button>
+              <button className="btn btn-sm" onClick={() => { setOpenId(null); onEditPrompt(openPrompt); }}><Pencil size={14} /> Edit</button>
               <button className="btn btn-sm btn-danger" onClick={() => { setOpenId(null); setConfirmDelete(openPrompt); }}><Trash2 size={14} /> Delete</button>
               <button className="btn btn-sm" onClick={() => setOpenId(null)} style={{ marginLeft: "auto" }}>Close</button>
             </div>

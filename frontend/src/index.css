@@ -160,6 +160,52 @@ a.brand-link:hover { text-decoration: none; }
 .page-sub { color: var(--muted); margin: 4px 0 0; font-size: 14px; max-width: 640px; }
 .page-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
+/* ---------- dashboard hero (generator landing) ---------- */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 36px 24px 26px;
+  margin-bottom: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -70% -20% auto;
+  height: 260px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--primary) 24%, transparent), transparent);
+  pointer-events: none;
+}
+.hero-title {
+  font-size: clamp(26px, 4.5vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 12px 0 6px;
+  position: relative;
+}
+.hero-sub { color: var(--muted); font-size: 14.5px; margin: 0 auto; max-width: 560px; position: relative; }
+.hero-usage { font-size: 12.5px; color: var(--faint); margin: 10px 0 0; position: relative; }
+.hero-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 16px; position: relative; }
+.btn-generate {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font: inherit; font-weight: 700; font-size: 14.5px;
+  padding: 11px 16px; border-radius: 10px; border: 0; cursor: pointer;
+  background: linear-gradient(135deg, #6d63ff, #4f46e5);
+  color: #fff; white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+.btn-generate svg { width: 16px; height: 16px; }
+.btn-generate:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.06); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4); }
+.btn-generate:active:not(:disabled) { transform: translateY(0); }
+.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; }
+.reveal { animation: rise 0.35s ease; scroll-margin-top: calc(var(--topbar-h) + 12px); }
+@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
+
 /* ---------- components ---------- */
 .card {
   background: var(--surface);
@@ -336,6 +382,7 @@ html, body { overflow-x: clip; }
   html, body { font-size: 14px; }
   .page { padding: 14px 12px 56px; }
   .page-title { font-size: 20px; }
+  .hero { padding: 26px 16px 20px; }
   .page-actions { width: 100%; }
   .page-actions .btn { flex: 1 1 auto; }
   .card { padding: 14px; }

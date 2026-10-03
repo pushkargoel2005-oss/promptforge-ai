@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  PenLine,
   FolderOpen,
   LayoutTemplate,
   Settings as SettingsIcon,
@@ -21,7 +20,6 @@ import AuthModal from "./AuthModal.jsx";
 
 const LINKS = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/studio", label: "Prompt Studio", icon: PenLine },
   { to: "/prompts", label: "My Prompts", icon: FolderOpen },
   { to: "/templates", label: "Templates", icon: LayoutTemplate },
   { to: "/settings", label: "Settings", icon: SettingsIcon },
@@ -78,7 +76,7 @@ export default function Layout({ children, theme, onToggleTheme, sidebarOpen, se
           ))}
         </nav>
         <div className="sidebar-footer">
-          <button className="btn btn-primary btn-block" onClick={() => { setSidebarOpen(false); navigate("/studio"); }}>
+          <button className="btn btn-primary btn-block" onClick={() => { setSidebarOpen(false); navigate("/", { state: { fresh: Date.now() } }); }}>
             <Plus /> New prompt
           </button>
           <div className="profile">

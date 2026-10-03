@@ -25,7 +25,7 @@ export default function Templates() {
           <h1 className="page-title">Templates</h1>
           <p className="page-sub">
             Professionally written starting points — <strong>built-in templates</strong>, not your saved prompts.
-            Pick one to customize it in the Studio.
+            Pick one to customize it on the dashboard.
           </p>
         </div>
       </div>
@@ -68,7 +68,7 @@ export default function Templates() {
                 <span className="badge">Built-in template</span>
               </div>
               <p className="prompt-preview" style={{ WebkitLineClamp: 3 }}>{t.prompt}</p>
-              <button className="btn btn-primary btn-sm" onClick={() => navigate("/studio", { state: { template: t } })}>
+              <button className="btn btn-primary btn-sm" onClick={() => navigate("/", { state: { template: t } })}>
                 Use this template <ArrowRight size={14} />
               </button>
             </article>

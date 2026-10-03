@@ -154,7 +154,7 @@ export default function Settings({ theme, onThemeChange }) {
           <div>
             <strong style={{ fontSize: 14 }}>Default AI platform</strong>
             <div className="field-hint">
-              Pre-selected in the Studio for new prompts.
+              Pre-selected on the dashboard for new prompts.
             </div>
           </div>
           <select
@@ -203,7 +203,7 @@ export default function Settings({ theme, onThemeChange }) {
                   : "Not configured — local demo mode"}
               </span>
               {status.providerConfigured
-                ? "Optimize in the Studio calls your provider from the server. Keys never reach the browser."
+                ? "Generate on the dashboard calls your provider from the server. Keys never reach the browser."
                 : "Optimize structures prompts with a built-in template. Saving and the library work fully without any key."}
             </div>
           </div>

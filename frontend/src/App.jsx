@@ -4,7 +4,6 @@ import Layout from "./components/Layout.jsx";
 import { ToastProvider, useToast } from "./components/Toast.jsx";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
-import Studio from "./pages/Studio.jsx";
 import Library from "./pages/Library.jsx";
 import Templates from "./pages/Templates.jsx";
 import Settings from "./pages/Settings.jsx";
@@ -56,7 +55,7 @@ function Shell() {
 
   const handleEditPrompt = useCallback(
     (prompt) => {
-      navigate("/studio", { state: { prompt } });
+      navigate("/", { state: { prompt } });
     },
     [navigate]
   );
@@ -102,14 +101,10 @@ function Shell() {
           path="/"
           element={
             <Dashboard
-              onEditPrompt={handleEditPrompt}
-              onDeletePrompt={handleDeletePrompt}
-              onToggleFavorite={handleToggleFavorite}
-              refreshKey={refreshKey}
+              onSaved={bump}
             />
           }
         />
-        <Route path="/studio" element={<Studio onSaved={bump} />} />
         <Route
           path="/prompts"
           element={
