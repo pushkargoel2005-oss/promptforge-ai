@@ -136,7 +136,7 @@ export default function Dashboard({ onEditPrompt, onDeletePrompt, onToggleFavori
           <span className="stat-value">{statsLoading ? "—" : statsError ? "!" : usage ? usage.remaining : "—"}</span>
           <span className="stat-label">resets at midnight UTC</span>
         </div>
-        <div className="card stat" style={{ gridColumn: "span 2" }}>
+        <div className="card stat span-2">
           <div className="stat-top">
             <span className="stat-label">AI providers used</span>
             <div className="segmented" role="group" aria-label="Chart range">
